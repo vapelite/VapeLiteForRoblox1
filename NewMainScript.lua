@@ -724,40 +724,43 @@ run(function()
 				local KillauraAttackRange = {Value = 18}
 				local KillauraAngle = {Value = 90}
 				local KillauraMoving = {Enabled = false}
-
+			
 				Killaura = vapelite:CreateModule({
 					Name = 'Killaura',
 					Function = function(callback)
 						if callback then
 							table.insert(Killaura.Connections, swingEvent.Event:Connect(function()
-								local plr = getEntitiesNear(KillauraAttackRange.Value)
-								if plr and store.hand.Type == 'sword' then
-									if not bedwars.SwordController:canSee({getInstance = function() return plr.Character end}) then return end
+								local npc = getEntitiesNear(KillauraAttackRange.Value)
+								if npc and store.hand.Type == 'sword' then
+									if not bedwars.SwordController:canSee({getInstance = function() return npc.Character end}) then return end
 									local selfrootpos = entitylib.character.RootPart.Position
 									local localfacing = entitylib.character.RootPart.CFrame.LookVector
-
-									local delta = (plr.RootPart.Position - selfrootpos)
+			
+									-- Check if the NPC is a "Bounty Hunter"
+									if npc.Name ~= "Bounty Hunter" then return end
+			
+									local delta = (npc.RootPart.Position - selfrootpos)
 									local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
 									if angle > (math.rad(KillauraAngle.Value) / 2) then return end
 									if KillauraMoving.Enabled and entitylib.character.RootPart.Velocity.Magnitude < 3 then return end
 									bedwars.Client:Get(bedwars.AttackRemote):SendToServer({
 										weapon = store.hand.tool,
 										chargedAttack = {chargeRatio = 0},
-										entityInstance = plr.Character,
+										entityInstance = npc.Character,
 										validate = {
 											raycast = {
 												cameraPosition = {value = gameCamera.CFrame.Position},
-												cursorDirection = {value = Ray.new(gameCamera.CFrame.p, plr.RootPart.Position).Unit.Direction}
+												cursorDirection = {value = Ray.new(gameCamera.CFrame.p, npc.RootPart.Position).Unit.Direction}
 											},
-											targetPosition = {value = plr.RootPart.Position},
-											selfPosition = {value = selfrootpos + CFrame.lookAt(selfrootpos, plr.RootPart.Position).LookVector * math.max(delta.Magnitude - 14.399, 0)}
+											targetPosition = {value = npc.RootPart.Position},
+											selfPosition = {value = selfrootpos + CFrame.lookAt(selfrootpos, npc.RootPart.Position).LookVector * math.max(delta.Magnitude - 14.399, 0)}
 										}
 									})
 								end
 							end))
 						end
 					end,
-					Tooltip = 'Attack players around you without aiming at them.'
+					Tooltip = 'Attack Bounty Hunter NPCs around you without aiming at them.'
 				})
 				KillauraAttackRange = Killaura:CreateSlider({
 					Name = 'Attack range',
@@ -773,6 +776,7 @@ run(function()
 				})
 				KillauraMoving = Killaura:CreateToggle({Name = 'Only while moving'})
 			end)
+			
 
 			--[[
 				Render
